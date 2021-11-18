@@ -1,0 +1,198 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: popular-slides-spark-hadoop-conf
+data:
+  # https://stackoverflow.com/questions/38482779/spark-submit-yarn-mode-hadoop-conf-dir-contents/38483127
+  core-site.xml: |
+    <?xml version="1.0"?>
+    <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+    <configuration>
+      <property>
+            <name>fs.defaultFS</name>
+            <value>hdfs://my-hadoop-cluster-hadoop-hdfs-nn:9000/</value>
+            <description>NameNode URI</description>
+        </property>
+    </configuration>
+
+  hdfs-site.xml: |
+    <?xml version="1.0"?>
+    <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+    <configuration><property>
+          <name>dfs.webhdfs.enabled</name>
+          <value>true</value>
+      </property><property>
+        <name>dfs.datanode.use.datanode.hostname</name>
+        <value>false</value>
+      </property>
+
+      <property>
+        <name>dfs.client.use.datanode.hostname</name>
+        <value>false</value>
+      </property>
+
+      <property>
+        <name>dfs.replication</name>
+          <value>3</value>
+      </property>
+
+      <property>
+        <name>dfs.datanode.data.dir</name>
+        <value>file:///root/hdfs/datanode</value>
+        <description>DataNode directory</description>
+      </property>
+
+      <property>
+        <name>dfs.namenode.name.dir</name>
+        <value>file:///root/hdfs/namenode</value>
+        <description>NameNode directory for namespace and transaction logs storage.</description>
+      </property>
+
+      <property>
+        <name>dfs.namenode.datanode.registration.ip-hostname-check</name>
+        <value>false</value>
+      </property>
+
+      <!-- Bind to all interfaces -->
+      <property>
+        <name>dfs.namenode.rpc-bind-host</name>
+        <value>0.0.0.0</value>
+      </property>
+      <property>
+        <name>dfs.namenode.servicerpc-bind-host</name>
+        <value>0.0.0.0</value>
+      </property>
+      <!-- /Bind to all interfaces -->
+
+    </configuration>
+
+  # check if this is required at all
+  mapred-site.xml: |
+    <?xml version="1.0"?>
+    <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+    <configuration>
+      <property>
+        <name>mapreduce.framework.name</name>
+        <value>yarn</value>
+      </property>
+      <property>
+        <name>mapreduce.jobhistory.address</name>
+        <value>my-hadoop-cluster-hadoop-yarn-rm-0.my-hadoop-cluster-hadoop-yarn-rm.default.svc.cluster.local:10020</value>
+      </property>
+      <property>
+        <name>mapreduce.jobhistory.webapp.address</name>
+        <value>my-hadoop-cluster-hadoop-yarn-rm-0.my-hadoop-cluster-hadoop-yarn-rm.default.svc.cluster.local:19888</value>
+      </property>
+    </configuration>
+
+  yarn-site.xml: |
+    <?xml version="1.0"?>
+    <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+    <configuration>
+      <property>
+        <name>yarn.resourcemanager.hostname</name>
+        <value>my-hadoop-cluster-hadoop-yarn-rm</value>
+      </property>
+
+      <!-- Bind to all interfaces -->
+      <property>
+        <name>yarn.resourcemanager.bind-host</name>
+        <value>0.0.0.0</value>
+      </property>
+      <property>
+        <name>yarn.nodemanager.bind-host</name>
+        <value>0.0.0.0</value>
+      </property>
+      <property>
+        <name>yarn.timeline-service.bind-host</name>
+        <value>0.0.0.0</value>
+      </property>
+      <!-- /Bind to all interfaces -->
+
+      <property>
+        <name>yarn.nodemanager.vmem-check-enabled</name>
+        <value>false</value>
+      </property>
+
+      <property>
+        <name>yarn.nodemanager.aux-services</name>
+        <value>mapreduce_shuffle</value>
+      </property>
+
+      <property>
+        <name>yarn.nodemanager.aux-services.mapreduce_shuffle.class</name>
+        <value>org.apache.hadoop.mapred.ShuffleHandler</value>
+      </property>
+
+      <property>
+        <description>List of directories to store localized files in.</description>
+        <name>yarn.nodemanager.local-dirs</name>
+        <value>/var/lib/hadoop-yarn/cache/${user.name}/nm-local-dir</value>
+      </property>
+
+      <property>
+        <description>Where to store container logs.</description>
+        <name>yarn.nodemanager.log-dirs</name>
+        <value>/var/log/hadoop-yarn/containers</value>
+      </property>
+
+      <property>
+        <description>Where to aggregate logs to.</description>
+        <name>yarn.nodemanager.remote-app-log-dir</name>
+        <value>/var/log/hadoop-yarn/apps</value>
+      </property>
+
+      <property>
+        <name>yarn.application.classpath</name>
+        <value>
+          /usr/local/hadoop/etc/hadoop,
+          /usr/local/hadoop/share/hadoop/common/*,
+          /usr/local/hadoop/share/hadoop/common/lib/*,
+          /usr/local/hadoop/share/hadoop/hdfs/*,
+          /usr/local/hadoop/share/hadoop/hdfs/lib/*,
+          /usr/local/hadoop/share/hadoop/mapreduce/*,
+          /usr/local/hadoop/share/hadoop/mapreduce/lib/*,
+          /usr/local/hadoop/share/hadoop/yarn/*,
+          /usr/local/hadoop/share/hadoop/yarn/lib/*
+        </value>
+      </property>
+    </configuration>
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: popular-slides-spark
+  labels:
+    app: popular-slides-spark
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: popular-slides-spark
+  template:
+    metadata:
+      labels:
+        app: popular-slides-spark
+    spec:
+      containers:
+        - name: popular-slides-spark
+          image: farberg/popular-slides-spark
+          # Mount the volume that has been populated by the init container
+          env:
+            - name: HADOOP_CONF_DIR
+              value: "/hadoop-config/"
+            - name: HADOOP_USER_NAME
+              value: "root"
+            - name: HADOOP_JAAS_DEBUG
+              value: "true"
+
+          volumeMounts:
+            - name: hadoop-conf-volume
+              mountPath: /hadoop-config
+      volumes:
+        - name: hadoop-conf-volume
+          configMap:
+            name: popular-slides-spark-hadoop-conf
