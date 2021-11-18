@@ -10,6 +10,7 @@ slidingDuration = '1 minute'
 
 # Example Part 1
 # Create a spark session
+# remove '.master("local[*]")' if you want to execute this on a kubernetes cluster
 spark = SparkSession.builder \
     .appName("Structured Streaming") \
     .master("local[*]") \
