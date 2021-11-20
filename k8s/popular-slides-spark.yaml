@@ -14,9 +14,18 @@ spec:
       labels:
         app: popular-slides-spark
     spec:
+#      serviceAccountName: spark-app # needed when submitting jobs to kubernetes
       containers:
       - name: popular-slides-spark
         image: timebertt/popular-slides-spark
+        args:
+#        - --conf
+#        - spark.kubernetes.container.image=bitnami/spark:3.0.0
+        - --conf
+        - spark.executor.cores=2
+        - --conf
+        - spark.executor.memory=4000m
+        - /app/spark-app.py
         env:
         - name: HADOOP_CONF_DIR
           value: "/hadoop-config"
@@ -24,6 +33,18 @@ spec:
           value: "root"
         - name: HADOOP_JAAS_DEBUG
           value: "true"
+#        - name: MASTER
+#          value: "local"
+        - name: MASTER
+          value: "yarn"
+#        - name: MASTER
+#          value: "k8s://https://kubernetes.default:443"
+        - name: DEPLOY_MODE
+          value: "client"
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
         volumeMounts:
         - name: hadoop-conf
           mountPath: /hadoop-config

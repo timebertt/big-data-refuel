@@ -14,8 +14,17 @@ A running Hadoop cluster with YARN (for checkpointing)
 
 ```bash
 helm repo add stable https://charts.helm.sh/stable
-helm install --namespace=default --set hdfs.dataNode.replicas=1 --set yarn.nodeManager.replicas=1 --set hdfs.webhdfs.enabled=true my-hadoop-cluster stable/hadoop
+helm install --namespace=default --set hdfs.dataNode.replicas=1 \
+  --set hdfs.webhdfs.enabled=true \
+  --set yarn.nodeManager.replicas=3 \
+  --set yarn.nodeManager.resources.requests.cpu=2,yarn.nodeManager.resources.requests.memory=4Gi \
+  --set yarn.nodeManager.resources.limits.cpu=3,yarn.nodeManager.resources.limits.memory=6Gi \
+  my-hadoop-cluster stable/hadoop
 ```
+
+Note: `yarn.nodeManager.replicas` is the number of workers that can run spark jobs submitted to yarn.
+When setting `yarn.nodeManager.resources.requests.{cpu,memory}`, consider the amount of compute resources available in your cluster,
+e.g. a minikube cluster is limited by the size of your machine.
 
 ## Deploy
 

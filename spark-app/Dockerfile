@@ -68,11 +68,8 @@ COPY --chown=spark:spark *.py /app/
 # Use local deployment
 # --master local
 
-ENTRYPOINT spark-submit --verbose \
-	--master local \
-	--conf "spark.jars.ivy=${IVY_PACKAGE_DIR}" \
-	--packages "${SPARK_KAFKA_DEPENDENCY}" \
-	--py-files /app/dependencies.zip \
-	/app/spark-app.py
+COPY entrypoint.sh /
 
-CMD [""]
+ENTRYPOINT [ "/entrypoint.sh" ]
+
+CMD ["/app/spark-app.py"]
