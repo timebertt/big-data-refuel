@@ -26,7 +26,7 @@ spec:
 
           echo "### uploading data to hdfs"
           hdfs dfs -mkdir -p /input
-          hdfs dfs -put /data/{prices,stations} /input
+          hdfs dfs -put -f /data/{prices,stations} /input
 
           echo "### Success!"
         env:
@@ -35,14 +35,14 @@ spec:
         - name: HADOOP_USER_NAME
           value: "root"
         volumeMounts:
-        - name: hadoop-conf-volume
+        - name: hadoop-conf
           mountPath: /hadoop-config
         - name: data
           mountPath: /data
       volumes:
-      - name: hadoop-conf-volume
+      - name: hadoop-conf
         configMap:
-          name: popular-slides-spark-hadoop-conf
+          name: hadoop-conf
       - name: data
         emptyDir: {}
 
