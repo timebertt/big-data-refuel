@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: popular-slides-web
-          image: farberg/popular-slides
+          image: timebertt/popular-slides
           ports:
             - containerPort: 3000
 
@@ -46,12 +46,14 @@ metadata:
     nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   rules:
-    - http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: popular-slides-service
-                port:
-                  number: 3000
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: popular-slides-service
+            port:
+              number: 3000
+    # remove when running on local cluster (e.g. minikube) or adapt to ingress domain
+    host: app.ingress.big-data-labs.adm2021.shoot.canary.k8s-hana.ondemand.com

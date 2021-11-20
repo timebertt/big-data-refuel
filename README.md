@@ -1,11 +1,4 @@
-# Use Case: Popular NASA Shuttle Missions
-
-```json
-{ 
-	mission: 'sts-10', 
-	timestamp: 1604325221 
-}
-```
+# Use Case: Analyzing fuel prices
 
 ## Prerequisites
 
@@ -26,4 +19,4 @@ helm install --namespace=default --set hdfs.dataNode.replicas=1 --set yarn.nodeM
 
 ## Deploy
 
-To develop using [Skaffold](https://skaffold.dev/), use `skaffold dev`. 
+To develop using [Skaffold](https://skaffold.dev/), use `skaffold dev` (development mode with automatic rebuilds on file changes) or `skaffold run` (one-time deploy).

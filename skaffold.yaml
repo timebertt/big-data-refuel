@@ -6,12 +6,12 @@ metadata:
 
 build:
   artifacts:
-    - image: farberg/popular-slides
+    - image: timebertt/popular-slides
       context: web-app
-
-    - image: farberg/popular-slides-spark
+    - image: timebertt/popular-slides-spark
       context: spark-app
-
+  local:
+    useBuildkit: true
 deploy:
   kubectl:
     manifests:

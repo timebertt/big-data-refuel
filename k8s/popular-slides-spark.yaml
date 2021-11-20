@@ -178,21 +178,19 @@ spec:
         app: popular-slides-spark
     spec:
       containers:
-        - name: popular-slides-spark
-          image: farberg/popular-slides-spark
-          # Mount the volume that has been populated by the init container
-          env:
-            - name: HADOOP_CONF_DIR
-              value: "/hadoop-config/"
-            - name: HADOOP_USER_NAME
-              value: "root"
-            - name: HADOOP_JAAS_DEBUG
-              value: "true"
-
-          volumeMounts:
-            - name: hadoop-conf-volume
-              mountPath: /hadoop-config
-      volumes:
+      - name: popular-slides-spark
+        image: timebertt/popular-slides-spark
+        env:
+        - name: HADOOP_CONF_DIR
+          value: "/hadoop-config"
+        - name: HADOOP_USER_NAME
+          value: "root"
+        - name: HADOOP_JAAS_DEBUG
+          value: "true"
+        volumeMounts:
         - name: hadoop-conf-volume
-          configMap:
-            name: popular-slides-spark-hadoop-conf
+          mountPath: /hadoop-config
+      volumes:
+      - name: hadoop-conf-volume
+        configMap:
+          name: popular-slides-spark-hadoop-conf
