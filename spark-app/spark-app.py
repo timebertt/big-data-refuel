@@ -1,3 +1,4 @@
+from pyspark import SparkConf
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import *
 from pyspark.sql.types import DoubleType, StringType, StructType, TimestampType, BooleanType, IntegerType
@@ -8,19 +9,23 @@ dbSchema = 'popular'
 windowDuration = '4 hours'
 slidingDuration = '1 minute'
 
+# load default spark config (including hadoop config based on `HADOOP_CONF_DIR` environment variable)
+sparkConf = SparkConf()
+
 # Example Part 1
 # Create a spark session
-# remove '.master("local[*]")' if you want to execute this on a kubernetes cluster
+# add --master "local[*]" as a command-line option to spark-submit if you want to run this locally (e.g. in a standalone docker container)
 spark = SparkSession.builder \
+    .config(conf=sparkConf) \
     .appName("Structured Streaming") \
-    .master("local[*]") \
     .getOrCreate()
 
 # Set log level
 spark.sparkContext.setLogLevel('WARN')
 
-url = "https://dev.azure.com/tankerkoenig/362e70d1-bafa-4cf7-a346-1f3613304973/_apis/git/repositories/0d6e7286-91e4-402c-af56-fa75be1f223d/items?path=/prices/2021/11/2021-11-17-prices.csv&versionDescriptor%5BversionOptions%5D=0&versionDescriptor%5BversionType%5D=0&versionDescriptor%5Bversion%5D=master&resolveLfs=true&%24format=octetStream&api-version=5.0&download=true"
-url = "file:/data/*rices.csv"
+# source: "https://dev.azure.com/tankerkoenig/362e70d1-bafa-4cf7-a346-1f3613304973/_apis/git/repositories/0d6e7286-91e4-402c-af56-fa75be1f223d/items?path=/prices/2021/11&versionDescriptor%5BversionOptions%5D=0&versionDescriptor%5BversionType%5D=0&versionDescriptor%5Bversion%5D=master&resolveLfs=true&%24format=octetStream&api-version=5.0&download=true"
+# url = "file:/data/*prices.csv"
+url = "hdfs:///input/prices/2021/11/2021-11-19-prices*.csv"
 
 # # Example Part 2
 # # Read messages from Kafka
