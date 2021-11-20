@@ -25,7 +25,6 @@ spark.sparkContext.setLogLevel('WARN')
 
 # source: "https://dev.azure.com/tankerkoenig/362e70d1-bafa-4cf7-a346-1f3613304973/_apis/git/repositories/0d6e7286-91e4-402c-af56-fa75be1f223d/items?path=/prices/2021/11&versionDescriptor%5BversionOptions%5D=0&versionDescriptor%5BversionType%5D=0&versionDescriptor%5Bversion%5D=master&resolveLfs=true&%24format=octetStream&api-version=5.0&download=true"
 # url = "file:/data/*prices.csv"
-url = "hdfs:///input/prices/2021/11/2021-11-19-prices*.csv"
 
 # # Example Part 2
 # # Read messages from Kafka
@@ -39,6 +38,10 @@ url = "hdfs:///input/prices/2021/11/2021-11-19-prices*.csv"
 #     .load()
 
 
+def mapZeroToNull(x):
+    return when(col(x) > 0, col(x)).otherwise(None)
+
+# schemas
 pricesSchema = StructType() \
     .add("date", StringType()) \
     .add("station_uuid", StringType()) \
@@ -49,7 +52,27 @@ pricesSchema = StructType() \
     .add("e5change", IntegerType()) \
     .add("e10change", IntegerType())
 
-prices = spark.readStream.format("csv").schema(pricesSchema).option("header","true").load(url)
+stationsSchema = StructType() \
+    .add("uuid", StringType()) \
+    .add("name", StringType()) \
+    .add("brand", StringType()) \
+    .add("street", StringType()) \
+    .add("house_number", StringType()) \
+    .add("post_code", StringType()) \
+    .add("city", StringType()) \
+    .add("latitude", StringType()) \
+    .add("longitude", StringType()) \
+    .add("first_active", StringType()) \
+    .add("openingtimes_json", StringType())
+
+
+# load data from hdfs
+prices = spark.readStream.format("csv").schema(pricesSchema).option("header", "true") \
+    .load("hdfs:///input/prices/2021/11/*-prices.csv") \
+    .withColumn('date', unix_timestamp('date', "yyyy-MM-dd HH:mm:ssX").cast(TimestampType())) \
+    .withColumn('diesel', mapZeroToNull('diesel')) \
+    .withColumn('e5', mapZeroToNull('e5')) \
+    .withColumn('e10', mapZeroToNull('e10'))
 
 # Displays the content of the DataFrame to stdout
 # prices.show()
@@ -57,19 +80,8 @@ prices = spark.readStream.format("csv").schema(pricesSchema).option("header","tr
 # Print the schema in a tree format
 # prices.printSchema()
 
-def mapZeroToNull(x):
-    return when(col(x) > 0, col(x)).otherwise(None)
-
-
-# 2021-11-17 00:00:08+01
-prices = prices \
-    .withColumn('date', unix_timestamp('date', "yyyy-MM-dd HH:mm:ssX").cast(TimestampType())) \
-    .withColumn('diesel', mapZeroToNull('diesel')) \
-    .withColumn('e5', mapZeroToNull('e5')) \
-    .withColumn('e10', mapZeroToNull('e10'))
-
-# prices.show()
-# prices.printSchema()
+stations = spark.readStream.format("csv").schema(stationsSchema).option("header", "true") \
+    .load("hdfs:///input/stations/2021/11/*-stations.csv")
 
 # # Example Part 3
 # # Convert value: binary -> JSON -> fields + parsed timestamp
@@ -93,22 +105,29 @@ prices = prices \
 
 # Example Part 4
 # Compute most popular slides
-minPrices = prices.select(column("*")) \
+minPrices = prices \
+    .join(stations, prices.station_uuid == stations.uuid, "inner") \
     .withWatermark("date", windowDuration) \
     .groupBy(
         window(
             column("date"),
             windowDuration
-        ),
-        column("station_uuid")
-    ).min()
+        ).alias("window"),
+        "post_code"
+    ) \
+    .agg(
+        min(column("diesel")).alias("diesel"),
+        min(column("e5")).alias("e5"),
+        min(column("e10")).alias("e10"),
+    ) \
+    .where(col("post_code").like("687%"))
 
 # Example Part 5
 # Start running the query; print running counts to the console
 consoleDump = minPrices \
     .writeStream \
     .trigger(processingTime="1 minute") \
-    .outputMode("update") \
+    .outputMode("append") \
     .format("console") \
     .option("numRows", "500") \
     .option("truncate", "false") \
