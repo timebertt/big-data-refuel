@@ -1,0 +1,36 @@
+# if submitting spark jobs to kubernetes, we need proper RBAC permission for managing pods
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: spark-app
+  labels:
+    app: spark-app
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: spark-app
+  labels:
+    app: spark-app
+rules:
+- verbs:
+  - "*"
+  apiGroups:
+  - ""
+  resources:
+  - pods
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: spark-app
+  labels:
+    app: spark-app
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: spark-app
+subjects:
+- kind: ServiceAccount
+  name: spark-app

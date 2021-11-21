@@ -14,8 +14,17 @@ A running Hadoop cluster with YARN (for checkpointing)
 
 ```bash
 helm repo add stable https://charts.helm.sh/stable
-helm install --namespace=default --set hdfs.dataNode.replicas=1 --set yarn.nodeManager.replicas=1 --set hdfs.webhdfs.enabled=true my-hadoop-cluster stable/hadoop
+helm install --namespace=default --set hdfs.dataNode.replicas=1 \
+  --set hdfs.webhdfs.enabled=true \
+  --set yarn.nodeManager.replicas=3 \
+  --set yarn.nodeManager.resources.requests.cpu=2,yarn.nodeManager.resources.requests.memory=4Gi \
+  --set yarn.nodeManager.resources.limits.cpu=3,yarn.nodeManager.resources.limits.memory=6Gi \
+  my-hadoop-cluster stable/hadoop
 ```
+
+Note: `yarn.nodeManager.replicas` is the number of workers that can run spark jobs submitted to yarn.
+When setting `yarn.nodeManager.resources.requests.{cpu,memory}`, consider the amount of compute resources available in your cluster,
+e.g. a minikube cluster is limited by the size of your machine.
 
 ## Deploy
 
@@ -46,3 +55,14 @@ $ k exec my-hadoop-cluster-hadoop-hdfs-dn-0 -- hdfs dfs -du -h "/input"
 
 Our Spark app will read the downloaded data from HDFS.
 Connection details are configured in `core-site.xml` and `hdfs-site.xml` (file location is configured via `HADOOP_CONF_DIR` environment variable).
+
+To run the spark app locally in a Docker container:
+Set `mode = "local"` in `spark-app.py`.
+Then, use the following commands:
+```bash
+$ docker run -it --rm -v "$PWD/spark-app:/app" -v "$PWD/data:/data" --name=pyspark jupyter/pyspark-notebook bash
+(base) jovyan@df9cd26555db:~$ pip install -r /app/requirements.txt
+...
+(base) jovyan@df9cd26555db:~$ spark-submit --verbose --master local /app/spark-app.py
+...
+```
