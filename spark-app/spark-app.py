@@ -9,7 +9,7 @@ mode = "cluster"
 
 dbOptions = {"host": "my-app-mysql-service", 'port': 33060, "user": "root", "password": "mysecretpw"}
 if mode == "local":
-    dbOptions["host"] = "host.docker.internal"
+    dbOptions["host"] = "host.docker.internal" # if mysql database is running on your host machine (or exposed via kubectl port-forward)
 
 dbSchema = 'prices'
 windowDuration = '4 hours'

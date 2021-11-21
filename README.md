@@ -55,3 +55,14 @@ $ k exec my-hadoop-cluster-hadoop-hdfs-dn-0 -- hdfs dfs -du -h "/input"
 
 Our Spark app will read the downloaded data from HDFS.
 Connection details are configured in `core-site.xml` and `hdfs-site.xml` (file location is configured via `HADOOP_CONF_DIR` environment variable).
+
+To run the spark app locally in a Docker container:
+Set `mode = "local"` in `spark-app.py`.
+Then, use the following commands:
+```bash
+$ docker run -it --rm -v "$PWD/spark-app:/app" -v "$PWD/data:/data" --name=pyspark jupyter/pyspark-notebook bash
+(base) jovyan@df9cd26555db:~$ pip install -r /app/requirements.txt
+...
+(base) jovyan@df9cd26555db:~$ spark-submit --verbose --master local /app/spark-app.py
+...
+```
