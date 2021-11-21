@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+
+<div class="jumbotron">
+
+    <h2>{{ message }}</h2>
+
+    <br>
+
+    {% for result in results %}
+    <p>{{result.name}}</p>
+    <p>{{result.street}}</p>
+    <p>{{result.plz}} {{result.city}}</p>
+    {% endfor %}
+
+    <br>
+    {% for parameter in parameters %}
+    <p>{{parameter.kraftstoff}} kostet {{parameter.wochentag}} zwischen {{parameter.zeitfenster}} 
+    <u>
+        {% for result in results %}
+            {{result.price}}
+        {% endfor %}
+    </u>
+    Euro.</p>
+    {% endfor %}
+    <br>
+
+</div>
+
+{% endblock %}

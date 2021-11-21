@@ -1,0 +1,58 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+
+<div class="jumbotron">
+    <h1>Finde jetzt die g&uuml;nstigste Tankstelle in deiner N&auml;he</h1>
+    <br>
+    <p class="lead">Die Preise von Kraftstoffen variieren je nach Uhrzeit und Ort sehr stark. <br> H&auml;ufig &auml;ndern einzelne Tankstellen ihre Preise vier- bis f&uuml;nfmal pro Tag. </p>
+    <p class="lead">F&uuml;lle einfach die folgenden Felder aus und finde die g&uuml;nstigste Tankstelle. </p>
+    <br>
+    <form method="get">
+        <label for="ort">Kraftstoff</label>
+        <br>
+        <select name="kraftstoff" id="kraftstoff">
+            <option value="diesel">Diesel</option>
+            <option value="e5">e5</option>
+            <option value="e10">e10</option>
+        </select>
+        <br>
+        <br>
+        <label for="ort">Ort</label>
+        <br>
+        <input type="text" name="Ort" />
+        <br>
+        <br>
+        <label for="wochentag">Wochentag</label>
+        <br>
+        <select name="zeit" id="zeit">
+            <option value="1">montags</option>
+            <option value="2">dienstags</option>
+            <option value="3">mittwochs</option>
+            <option value="4">donnerstags</option>
+            <option value="5">freitags</option>
+            <option value="6">samstags</option>
+            <option value="6">sonntags</option>
+        </select>
+        <br>
+        <br>
+        <label for="zeitfenster">Zeitfenster</label>
+        <br>
+        <select name="zeit" id="zeit">
+            <option value="1">0 Uhr - 4 Uhr</option>
+            <option value="2">4 Uhr - 8 Uhr</option>
+            <option value="3">8 Uhr - 12 Uhr</option>
+            <option value="4">12 Uhr - 16 Uhr</option>
+            <option value="5">16 Uhr - 20 Uhr</option>
+            <option value="6">20 Uhr - 24 Uhr</option>
+        </select>
+        <br>
+        <br>
+    </form>
+    <p><a href="{{ url_for('result') }}" class="btn btn-primary btn-large">Suche starten &raquo;</a></p>
+</div>
+
+
+
+{% endblock %}
