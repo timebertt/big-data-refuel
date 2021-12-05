@@ -9,6 +9,7 @@ WORKDIR /app
 # These are obtained using Ivy later
 ENV SPARK_VERSION "3.0.0"
 ENV SPARK_KAFKA_DEPENDENCY "org.apache.spark:spark-sql-kafka-0-10_2.12:${SPARK_VERSION}"
+ENV SPARK_MYSQL_DEPENDENCY "mysql:mysql-connector-java:8.0.27"
 ENV IVY_PACKAGE_DIR "/tmp/.ivy"
 
 #------------------------------------
@@ -37,6 +38,7 @@ WORKDIR /app
 RUN touch /tmp/empty.py && spark-submit --verbose \
 	--conf "spark.jars.ivy=${IVY_PACKAGE_DIR}" \
 	--packages "${SPARK_KAFKA_DEPENDENCY}" \
+	--packages "${SPARK_MYSQL_DEPENDENCY}" \
 	/tmp/empty.py && rm -f /tmp/empty.py
 
 # Prepare the app's python dependencies

@@ -16,5 +16,6 @@ spark-submit --verbose \
 	--conf "spark.jars.ivy=${IVY_PACKAGE_DIR}" \
 	--conf "spark.driver.host=${POD_IP}" \
 	--packages "${SPARK_KAFKA_DEPENDENCY}" \
+	--packages "${SPARK_MYSQL_DEPENDENCY}" \
 	--py-files /app/dependencies.zip \
 	"$@"

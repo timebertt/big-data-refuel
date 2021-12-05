@@ -51,6 +51,7 @@ spec:
         - name: MYSQL_DATABASE
           value: "prices"
         ports:
+        - containerPort: 3306
         - containerPort: 33060
 
 ---
@@ -63,6 +64,10 @@ spec:
   selector:
     app: my-mysql
   ports:
+  - name: mysql
+    protocol: TCP
+    port: 3306
+    targetPort: 3306
   - name: mysql-xproto
     protocol: TCP
     port: 33060
