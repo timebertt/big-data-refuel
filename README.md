@@ -66,3 +66,11 @@ $ docker run -it --rm -v "$PWD/spark-app:/app" -v "$PWD/data:/data" --name=pyspa
 (base) jovyan@df9cd26555db:~$ spark-submit --verbose --master local /app/spark-app.py
 ...
 ```
+
+### Frontend
+
+To run locally:
+```bash
+docker-compose up -d
+python userInterface/app.py
+```

@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+  mysql:
+    image: mysql
+    ports:
+    - 3306:3306
+    environment:
+      MYSQL_DATABASE: prices
+      MYSQL_ROOT_PASSWORD: mysecretpw
+    volumes:
+    - ./data/mysql-dump.sql:/docker-entrypoint-initdb.d/mysql-init.sql
