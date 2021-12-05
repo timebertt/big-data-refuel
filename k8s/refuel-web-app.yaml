@@ -2,38 +2,43 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: popular-slides
+  name: refuel-web-app
   labels:
-    app: popular-slides
+    app: refuel-web-app
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: popular-slides-web
+      app: refuel-web-app
   template:
     metadata:
       labels:
-        app: popular-slides-web
+        app: refuel-web-app
     spec:
       containers:
-        - name: popular-slides-web
-          image: timebertt/popular-slides
-          ports:
-            - containerPort: 3000
+      - name: refuel-web-app
+        image: timebertt/refuel-web-app
+        env:
+        - name: MYSQL_HOST
+          value: "my-app-mysql-service.default.svc"
+        - name: SERVER_HOST
+          value: "0.0.0.0"
+        ports:
+        - containerPort: 5555
 
 ---
 #Begin: Service
 kind: Service
 apiVersion: v1
 metadata:
-  name: popular-slides-service
+  name: refuel-web-app-service
 spec:
   selector:
-    app: popular-slides-web
+    app: refuel-web-app
   ports:
     - protocol: TCP
-      port: 3000
-      targetPort: 3000
+      port: 5555
+      targetPort: 5555
 #End: Service
 
 ---
@@ -41,8 +46,9 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: popular-slides-ingress
+  name: refuel-web-app-ingress
   annotations:
+    cert.gardener.cloud/purpose: managed
     nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   rules:
@@ -52,8 +58,8 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: popular-slides-service
+            name: refuel-web-app-service
             port:
-              number: 3000
+              number: 5555
     # remove when running on local cluster (e.g. minikube) or adapt to ingress domain
     host: app.ingress.big-data-labs.adm2021.shoot.canary.k8s-hana.ondemand.com

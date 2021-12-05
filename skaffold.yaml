@@ -6,8 +6,8 @@ metadata:
 
 build:
   artifacts:
-    - image: timebertt/popular-slides
-      context: web-app
+    - image: timebertt/refuel-web-app
+      context: userInterface
     - image: timebertt/popular-slides-spark
       context: spark-app
   local:
