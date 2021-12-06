@@ -17,12 +17,12 @@
 
     <br>
     {% for parameter in parameters %}
-    <p>{{parameter.kraftstoff}} kostet {{parameter.wochentag}} zwischen {{parameter.zeitfenster}} 
-    <u>
+    <p>{{parameter.kraftstoff}} kostet {{parameter.wochentag}}
+    <strong>
         {% for result in results %}
             {{result.price}}
         {% endfor %}
-    </u>
+    </strong>
     Euro.</p>
     {% endfor %}
     <br>

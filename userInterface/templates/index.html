@@ -9,36 +9,37 @@
     <p class="lead">Die Preise von Kraftstoffen variieren je nach Uhrzeit und Ort sehr stark. <br> H&auml;ufig &auml;ndern einzelne Tankstellen ihre Preise vier- bis f&uuml;nfmal pro Tag. </p>
     <p class="lead">F&uuml;lle einfach die folgenden Felder aus und finde die g&uuml;nstigste Tankstelle. </p>
     <br>
-    <form method="get">
-        <label for="ort">Kraftstoff</label>
+    <form method="post" enctype=multipart/form-data>
+        <label for="Kraftstoff">Kraftstoff</label>
         <br>
         <select name="kraftstoff" id="kraftstoff">
-            <option value="diesel">Diesel</option>
-            <option value="e5">e5</option>
-            <option value="e10">e10</option>
+            <option value="Diesel">Diesel</option>
+            <option value="E5">e5</option>
+            <option value="E10">e10</option>
         </select>
         <br>
         <br>
-        <label for="ort">PLZ</label>
+        <label for="plz">PLZ</label>
         <br>
-        <input type="text" name="Ort" />
+        <input type="text" name="plz" />
         <br>
         <br>
         <label for="wochentag">Wochentag</label>
         <br>
         <select name="zeit" id="zeit">
-            <option value="1">montags</option>
-            <option value="2">dienstags</option>
-            <option value="3">mittwochs</option>
-            <option value="4">donnerstags</option>
-            <option value="5">freitags</option>
-            <option value="6">samstags</option>
-            <option value="6">sonntags</option>
+            <option value="montags">Montag</option>
+            <option value="dienstags">Dienstag</option>
+            <option value="mittwochs">Mittwoch</option>
+            <option value="donnerstags">Donnerstag</option>
+            <option value="freitags">Freitag</option>
+            <option value="samstags">Samstag</option>
+            <option value="sonntags">Sonntag</option>
         </select>
         <br>
         <br>
+        <input type="submit" value="Suche starten" class="btn btn-primary btn-large"><br>
     </form>
-    <p><a href="{{ url_for('result') }}" class="btn btn-primary btn-large">Suche starten &raquo;</a></p>
+    
 </div>
 
 
