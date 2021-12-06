@@ -39,7 +39,7 @@ def home():
         res = fetchResult()
         results = [
             {"name": "Esso Tankstelle", "street": "SCHOZACHER STR. 51", "plz": res["post_code"], "city": "STUTTGART",
-            "price": res["e5"]}
+            "price": res[req["kraftstoff"]]}
         ]
 
         return render_template(
