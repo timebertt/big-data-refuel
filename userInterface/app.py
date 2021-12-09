@@ -4,6 +4,7 @@ Routes and views for the flask application.
 
 import mysql.connector
 from datetime import datetime
+from datetime import timedelta
 from os import environ
 import pandas as pd
 from io import BytesIO
@@ -21,9 +22,13 @@ mydb = mysql.connector.connect(
 )
 
 def fetchResult(input_post_code):
+     # Rufe nur die Werte der letzten 7 Tage ab
+    #today = datetime.today()
+    today = datetime(2021,11,15,12,0,0)
+    start_date = (today - timedelta(days=7)).strftime('%Y-%m-%d %H:%M:%S')
     cur = mydb.cursor(dictionary=True, buffered=True)
-    cur.execute('SELECT * FROM fuel_prices WHERE post_code = '+input_post_code)
-    return cur.fetchmany(30)
+    cur.execute(f'''SELECT * FROM fuel_prices WHERE post_code = {input_post_code} AND window_start > "{start_date}" AND window_start <"{today}"''')
+    return cur.fetchall()
 
 @app.route('/',methods=["GET", "POST"])
 @app.route('/home',methods=["GET", "POST"])
@@ -33,29 +38,24 @@ def home():
     if request.method == "POST":
         # Was der Benutzer eingegeben hat
         req = request.form
-        print(req)
         parameters = [
             {"kraftstoff": req["kraftstoff"], "wochentag": req["zeit"]}
         ]
-
         # Was als Ergebnis geliefert wird
-        print(req["plz"])
         res = pd.DataFrame(fetchResult(req["plz"]))
-        results = [
-            {"name": "Esso Tankstelle", "street": "SCHOZACHER STR. 51", "plz": req["plz"], "city": "STUTTGART",
+        results = [{"name": "Esso Tankstelle", "street": "SCHOZACHER STR. 51", "plz": req["plz"], "city": "STUTTGART",
             "price": res[req["kraftstoff"]]}
         ]
 
         # Generate the figure 
-        fig = Figure()
+        fig = Figure(figsize=(12, 6), dpi=80)
         ax = fig.subplots()
-        ax.plot(res["window_start"], res["diesel"],label='Diesel')
-        ax.plot(res["window_start"], res["e5"],label='E5')
-        ax.plot(res["window_start"], res["e10"],label='E10')
+        ax.plot(res["window_start"], res[req["kraftstoff"]],label=req["kraftstoff"].title())
         ax.legend(loc="upper left")
+        ax.grid()
         # Save it to a temporary buffer.
         buf = BytesIO()
-        fig.savefig(buf, format="png")
+        fig.savefig(buf, format="png",transparent=True)
         # Embed the result in the html output.
         plot_url = base64.b64encode(buf.getbuffer()).decode("ascii") 
 
@@ -63,7 +63,7 @@ def home():
             'result.html',
             title='Ergebnis',
             year=datetime.now().year,
-            message='Das ist die günstigste Tankstelle',
+            message=f'Der Preisverlauf für {req["kraftstoff"].title()} über die letzten 7 Tage:',
             results=results,
             parameters=parameters,
             plot_url=plot_url)

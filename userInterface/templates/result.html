@@ -4,28 +4,16 @@
 
 
 <div class="jumbotron">
-
+    <br>
     <h2>{{ message }}</h2>
 
-    <br>
+
 
     {% for result in results %}
-    <p>{{result.name}}</p>
-    <p>{{result.street}}</p>
-    <p>{{result.plz}} {{result.city}}</p>
+    <p>für PLZ {{result.plz}}</p>
     {% endfor %}
 
-    <br>
-    {% for parameter in parameters %}
-    <p>{{parameter.kraftstoff}} kostet {{parameter.wochentag}}
-    <strong>
-        {% for result in results %}
-            {{result.price}}
-        {% endfor %}
-    </strong>
-    Euro.</p>
-    {% endfor %}
-    <br>
+   
     <img src="data:image/png;base64, {{ plot_url }}">
 </div>
 
