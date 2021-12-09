@@ -81,7 +81,7 @@ if mode == "local":
 
 stations = spark.readStream.format("csv").schema(stationsSchema).option("header", "true") \
     .load(stationsURL) \
-    .dropDuplicates("uuid")  # returns one row per station (we don't care about changes in metadata)
+    .dropDuplicate("uuid")  # returns one row per station (we don't care about changes in metadata)
 
 # Compute most popular slides
 minPrices = prices \
