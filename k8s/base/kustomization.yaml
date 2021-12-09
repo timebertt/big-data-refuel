@@ -1,0 +1,26 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+namespace: refuel
+
+configMapGenerator:
+- name: mysql-init
+  files:
+  - mysql-init.sql
+- name: hadoop-conf
+  files:
+  - hadoop/core-site.xml
+  - hadoop/hdfs-site.xml
+  - hadoop/mapred.xml
+  - hadoop/yarn-site.xml
+
+resources:
+- download-data-cronjob.yaml
+- memcached.yaml
+- mysql.yaml
+- refuel-spark-app.yaml
+- refuel-web-app.yaml
+- spark-rbac.yaml

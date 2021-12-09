@@ -1,32 +1,27 @@
-#Begin: Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: memcache-deployment
+  name: memcached
   labels:
-    app: memcache-deployment
+    app: memcached
 spec:
-  # Three memcached instances
   replicas: 2
   selector:
     matchLabels:
-      app: my-memcached
+      app: memcached
   template:
     metadata:
       labels:
-        app: my-memcached
+        app: memcached
     spec:
       containers:
-        - name: my-memcached
-          image: memcached:alpine
-          ports:
-            - containerPort: 11211
-#End: Deployment
-
+      - name: memcached
+        image: memcached:alpine
+        ports:
+        - containerPort: 11211
 ---
-#Begin: Service
-kind: Service
 apiVersion: v1
+kind: Service
 metadata:
   name: my-memcached-service
 spec:
@@ -34,4 +29,6 @@ spec:
   clusterIP: None
   selector:
     app: my-memcached
-#End: Service
+  ports:
+  - port: 11211
+    targetPort: 11211

@@ -1,18 +1,26 @@
-apiVersion: skaffold/v2alpha4
+apiVersion: skaffold/v2beta25
 kind: Config
-
 metadata:
-  name: popular-slides
+  name: refuel
 
 build:
   artifacts:
-    - image: timebertt/refuel-web-app
-      context: userInterface
-    - image: timebertt/popular-slides-spark
-      context: spark-app
+  - image: timebertt/refuel-web-app
+    context: web-app
+  - image: timebertt/refuel-spark-app
+    context: spark-app
   local:
     useBuildkit: true
+
 deploy:
-  kubectl:
-    manifests:
-      - k8s/*.yaml
+  kustomize:
+    paths:
+    - k8s/base
+
+profiles:
+- name: local
+- name: gardener-shoot
+  deploy:
+    kustomize:
+      paths:
+      - k8s/overlays/gardener-shoot

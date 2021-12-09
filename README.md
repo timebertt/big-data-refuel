@@ -2,24 +2,21 @@
 
 ## Prerequisites
 
-A running Strimzi.io Kafka operator
-
+Namespace `refuel`:
 ```bash
-helm repo add strimzi http://strimzi.io/charts/
-helm install my-kafka-operator strimzi/strimzi-kafka-operator
-kubectl apply -f https://farberg.de/talks/big-data/code/helm-kafka-operator/kafka-cluster-def.yaml
+k create ns refuel
 ```
 
-A running Hadoop cluster with YARN (for checkpointing)
+A running Hadoop cluster with YARN:
 
 ```bash
 helm repo add stable https://charts.helm.sh/stable
-helm install --namespace=default --set hdfs.dataNode.replicas=1 \
+helm install --namespace=refuel --set hdfs.dataNode.replicas=1 \
   --set hdfs.webhdfs.enabled=true \
   --set yarn.nodeManager.replicas=3 \
   --set yarn.nodeManager.resources.requests.cpu=2,yarn.nodeManager.resources.requests.memory=4Gi \
   --set yarn.nodeManager.resources.limits.cpu=3,yarn.nodeManager.resources.limits.memory=6Gi \
-  my-hadoop-cluster stable/hadoop
+  hadoop stable/hadoop
 ```
 
 Note: `yarn.nodeManager.replicas` is the number of workers that can run spark jobs submitted to yarn.
@@ -36,7 +33,7 @@ We use a [Kubernetes CronJob](https://kubernetes.io/docs/concepts/workloads/cont
 Each execution downloads data for one day starting with a configured start date (env var `DOWNLOAD_START_DATE`). It can be executed with a high frequency (e.g. every 2 minutes) to simulate new data arriving every day.
 
 ```
-$ k exec my-hadoop-cluster-hadoop-hdfs-dn-0 -- hdfs dfs -ls "/input/*/*"
+$ k exec hadoop-hadoop-hdfs-dn-0 -- hdfs dfs -ls "/input/*/*"
 -rw-r--r--   3 root supergroup   26716562 2021-12-09 19:46 /input/prices/2021-11-01-prices.csv
 -rw-r--r--   3 root supergroup   27371251 2021-12-09 19:46 /input/prices/2021-11-02-prices.csv
 -rw-r--r--   3 root supergroup   27861891 2021-12-09 19:47 /input/prices/2021-11-03-prices.csv
@@ -50,7 +47,7 @@ $ k exec my-hadoop-cluster-hadoop-hdfs-dn-0 -- hdfs dfs -ls "/input/*/*"
 -rw-r--r--   3 root supergroup    4443412 2021-12-09 19:48 /input/stations/2021-11-05-stations.csv
 -rw-r--r--   3 root supergroup    4442876 2021-12-09 19:49 /input/stations/2021-11-06-stations.csv
 
-$ k exec my-hadoop-cluster-hadoop-hdfs-dn-0 -- hdfs dfs -du -h "/input"
+$ k exec hadoop-hadoop-hdfs-dn-0 -- hdfs dfs -du -h "/input"
 11       /input/last_downloaded_date
 176.4 M  /input/prices
 25.4 M   /input/stations
@@ -77,5 +74,5 @@ $ docker run -it --rm -v "$PWD/spark-app:/app" -v "$PWD/data:/data" --name=pyspa
 To run locally:
 ```bash
 docker-compose up -d
-python userInterface/app.py
+python web-app/app.py
 ```

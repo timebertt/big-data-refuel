@@ -1,26 +1,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: popular-slides-spark
+  name: refuel-spark-app
   labels:
-    app: popular-slides-spark
+    app: refuel-spark-app
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: popular-slides-spark
+      app: refuel-spark-app
   template:
     metadata:
       labels:
-        app: popular-slides-spark
+        app: refuel-spark-app
     spec:
 #      serviceAccountName: spark-app # needed when submitting jobs to kubernetes
       containers:
-      - name: popular-slides-spark
-        image: timebertt/popular-slides-spark
+      - name: refuel-spark-app
+        image: timebertt/refuel-spark-app
         args:
-#        - --conf
-#        - spark.kubernetes.container.image=bitnami/spark:3.0.0
         - --conf
         - spark.executor.cores=2
         - --conf
@@ -33,6 +31,8 @@ spec:
           value: "root"
         - name: HADOOP_JAAS_DEBUG
           value: "true"
+        - name: MODE
+          value: "cluster"
 #        - name: MASTER
 #          value: "local"
         - name: MASTER

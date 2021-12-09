@@ -1,0 +1,16 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: refuel-web-app
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: refuel-web-app
+            port:
+              name: http
+    host: app.ingress.big-data-labs.adm2021.shoot.canary.k8s-hana.ondemand.com

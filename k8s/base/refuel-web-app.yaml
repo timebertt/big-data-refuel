@@ -1,4 +1,3 @@
-#Begin: Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -18,37 +17,38 @@ spec:
       containers:
       - name: refuel-web-app
         image: timebertt/refuel-web-app
+        readinessProbe:
+          httpGet:
+            port: 5555
+            path: /
+            scheme: HTTP
         env:
         - name: MYSQL_HOST
-          value: "my-app-mysql-service.default.svc"
+          value: "mysql"
         - name: SERVER_HOST
           value: "0.0.0.0"
         ports:
         - containerPort: 5555
-
+          name: http
 ---
-#Begin: Service
 kind: Service
 apiVersion: v1
 metadata:
-  name: refuel-web-app-service
+  name: refuel-web-app
 spec:
   selector:
     app: refuel-web-app
   ports:
     - protocol: TCP
+      name: http
       port: 5555
       targetPort: 5555
-#End: Service
-
 ---
-#Begin: Ingress
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: refuel-web-app-ingress
+  name: refuel-web-app
   annotations:
-    cert.gardener.cloud/purpose: managed
     nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   rules:
@@ -58,8 +58,6 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: refuel-web-app-service
+            name: refuel-web-app
             port:
-              number: 5555
-    # remove when running on local cluster (e.g. minikube) or adapt to ingress domain
-    host: app.ingress.big-data-labs.adm2021.shoot.canary.k8s-hana.ondemand.com
+              name: http

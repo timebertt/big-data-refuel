@@ -1,12 +1,13 @@
+from os import environ
+
 from pyspark import SparkConf
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import *
 from pyspark.sql.types import DoubleType, StringType, StructType, TimestampType, IntegerType
 
-mode = "cluster"
-# mode = "local"
+mode = environ.get("MODE", "local")
 
-dbOptions = {"host": "my-app-mysql-service", 'port': 3306, "user": "root", "password": "mysecretpw"}
+dbOptions = {"host": "mysql", 'port': 3306, "user": "root", "password": "mysecretpw"}
 if mode == "local":
     # if mysql database is running on your host machine (or exposed via kubectl port-forward)
     dbOptions["host"] = "host.docker.internal"
