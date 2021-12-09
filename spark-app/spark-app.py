@@ -8,9 +8,6 @@ from pyspark.sql.types import DoubleType, StringType, StructType, TimestampType,
 mode = environ.get("MODE", "local")
 
 dbOptions = {"host": "mysql", 'port': 3306, "user": "root", "password": "mysecretpw"}
-if mode == "local":
-    # if mysql database is running on your host machine (or exposed via kubectl port-forward)
-    dbOptions["host"] = "host.docker.internal"
 
 dbSchema = 'prices'
 windowDuration = '4 hours'

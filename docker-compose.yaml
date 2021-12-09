@@ -1,6 +1,20 @@
 version: '3'
 
 services:
+  spark-app:
+    image: timebertt/refuel-spark-app
+    build:
+      context: spark-app
+    entrypoint: /bin/bash
+    command: -c "sleep 1000"
+    tty: true
+    restart: always
+    working_dir: /spark-app
+    volumes:
+    - ./spark-app:/spark-app
+    - ./data:/data
+    environment:
+      MODE: local
   mysql:
     image: mysql
     ports:
