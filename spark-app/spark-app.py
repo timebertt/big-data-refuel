@@ -11,7 +11,6 @@ dbOptions = {"host": "mysql", 'port': 3306, "user": "root", "password": "mysecre
 
 dbSchema = 'prices'
 windowDuration = '4 hours'
-slidingDuration = '1 minute'
 
 # load default spark config (including hadoop config based on `HADOOP_CONF_DIR` environment variable)
 sparkConf = SparkConf()
@@ -79,7 +78,7 @@ if mode == "local":
 
 stations = spark.readStream.format("csv").schema(stationsSchema).option("header", "true") \
     .load(stationsURL) \
-    .dropDuplicate("uuid")  # returns one row per station (we don't care about changes in metadata)
+    .dropDuplicates(["uuid"])  # returns one row per station (we don't care about changes in metadata)
 
 # Compute most popular slides
 minPrices = prices \

@@ -8,7 +8,7 @@ master="${MASTER:-local}"
 
 deploy_mode=
 if [ -n "${DEPLOY_MODE}" ] ; then
-  deploy_mode="$(printf -- '--deploy-mode %s' ${DEPLOY_MODE})"
+  deploy_mode="--deploy-mode ${DEPLOY_MODE}"
 fi
 
 driver_host=
