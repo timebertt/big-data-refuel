@@ -30,25 +30,30 @@ e.g. a minikube cluster is limited by the size of your machine.
 
 To develop using [Skaffold](https://skaffold.dev/), use `skaffold dev` (development mode with automatic rebuilds on file changes) or `skaffold run` (one-time deploy).
 
-### Download Job
+### Download CronJob
 
-We use a [Kubernetes Job](https://kubernetes.io/docs/concepts/workloads/controllers/job/) to fetch raw data from https://dev.azure.com/tankerkoenig/tankerkoenig-data/_git/tankerkoenig-data and store it in HDFS.
-For performance reasons and disk space requirements it only downloads raw data for one month of 2021 (for now).
+We use a [Kubernetes CronJob](https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/) to fetch raw data from https://dev.azure.com/tankerkoenig/tankerkoenig-data/_git/tankerkoenig-data and store it in HDFS.
+Each execution downloads data for one day starting with a configured start date (env var `DOWNLOAD_START_DATE`). It can be executed with a high frequency (e.g. every 2 minutes) to simulate new data arriving every day.
 
 ```
-$ k exec my-hadoop-cluster-hadoop-hdfs-dn-0 -- hdfs dfs -ls "/input/*/*/*"
-Found 19 items
--rw-r--r--   3 root supergroup   26716562 2021-11-20 09:30 /input/prices/2021/11/2021-11-01-prices.csv
--rw-r--r--   3 root supergroup   27371251 2021-11-20 09:30 /input/prices/2021/11/2021-11-02-prices.csv
-...
-Found 19 items
--rw-r--r--   3 root supergroup    4442792 2021-11-20 09:30 /input/stations/2021/11/2021-11-01-stations.csv
--rw-r--r--   3 root supergroup    4439113 2021-11-20 09:30 /input/stations/2021/11/2021-11-02-stations.csv
-...
+$ k exec my-hadoop-cluster-hadoop-hdfs-dn-0 -- hdfs dfs -ls "/input/*/*"
+-rw-r--r--   3 root supergroup   26716562 2021-12-09 19:46 /input/prices/2021-11-01-prices.csv
+-rw-r--r--   3 root supergroup   27371251 2021-12-09 19:46 /input/prices/2021-11-02-prices.csv
+-rw-r--r--   3 root supergroup   27861891 2021-12-09 19:47 /input/prices/2021-11-03-prices.csv
+-rw-r--r--   3 root supergroup   27217196 2021-12-09 19:47 /input/prices/2021-11-04-prices.csv
+-rw-r--r--   3 root supergroup   27511444 2021-12-09 19:48 /input/prices/2021-11-05-prices.csv
+-rw-r--r--   3 root supergroup   24953811 2021-12-09 19:48 /input/prices/2021-11-06-prices.csv
+-rw-r--r--   3 root supergroup    4442792 2021-12-09 19:46 /input/stations/2021-11-01-stations.csv
+-rw-r--r--   3 root supergroup    4439113 2021-12-09 19:46 /input/stations/2021-11-02-stations.csv
+-rw-r--r--   3 root supergroup    4440561 2021-12-09 19:47 /input/stations/2021-11-03-stations.csv
+-rw-r--r--   3 root supergroup    4439959 2021-12-09 19:48 /input/stations/2021-11-04-stations.csv
+-rw-r--r--   3 root supergroup    4443412 2021-12-09 19:48 /input/stations/2021-11-05-stations.csv
+-rw-r--r--   3 root supergroup    4442876 2021-12-09 19:49 /input/stations/2021-11-06-stations.csv
 
 $ k exec my-hadoop-cluster-hadoop-hdfs-dn-0 -- hdfs dfs -du -h "/input"
-490.8 M  /input/prices
-80.5 M   /input/stations
+11       /input/last_downloaded_date
+176.4 M  /input/prices
+25.4 M   /input/stations
 ```
 
 ### Spark App

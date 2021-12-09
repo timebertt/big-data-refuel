@@ -1,0 +1,98 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: download-raw-data
+  labels:
+    app: download-raw-data
+spec:
+  concurrencyPolicy: Forbid
+  schedule: "*/5 * * * *" # runs every 5 minutes
+  jobTemplate:
+    metadata:
+      labels:
+        app: download-raw-data
+    spec:
+      template:
+        metadata:
+          labels:
+            app: download-raw-data
+        spec:
+          restartPolicy: Never
+          containers:
+          - name: download-raw-data
+            image: danisla/hadoop:2.9.0
+            imagePullPolicy: IfNotPresent
+            command:
+            - bash
+            - -c
+            - |
+              set -o errexit
+              set -o pipefail
+              set -o nounset
+
+              echo "=== Starting download job ==="
+
+              last_downloaded_file=/input/last_downloaded_date
+              date_to_download=$DOWNLOAD_START_DATE
+              if last_downloaded_date=$(hdfs dfs -cat $last_downloaded_file 2>/dev/null) ; then
+                date_to_download="$(date --date="$last_downloaded_date + 1 day" +"%Y/%m/%d")"
+              fi
+
+              IFS=/ read year month day <<< $date_to_download
+
+              mkdir -p /data
+
+              for f in prices stations ; do
+                dirname=$f/$year/$month
+                filename=$year-$month-$day-$f.csv
+
+                if hdfs dfs -stat /input/$filename &>/dev/null ; then
+                  echo "> hdfs:///input/$filename already exists, skipping download"
+                  continue
+                fi
+
+                echo "### fetching $f data from Azure ($date_to_download)"
+                status_code=$(curl -Lo /data/$f.zip -w "%{http_code}" "https://dev.azure.com/tankerkoenig/tankerkoenig-data/_apis/git/repositories/tankerkoenig-data/items?path=/$dirname/$filename&versionDescriptor%5BversionOptions%5D=0&versionDescriptor%5BversionType%5D=0&versionDescriptor%5Bversion%5D=master&resolveLfs=true&%24format=zip&api-version=5.0&download=true")
+                case $status_code in
+                  200)
+                    ;;
+                  404)
+                    echo "> data not available for $date_to_download, exiting."
+                    exit 0
+                    ;;
+                  *)
+                    echo "> download failed with $status_code"
+                    exit 1
+                esac
+
+                echo "### unzipping $f data"
+                unzip /data/$f.zip -d /data
+
+                echo "### uploading $f data to hdfs"
+                hdfs dfs -mkdir -p /input/$f
+                hdfs dfs -put /data/$filename /input/$f/$filename
+                echo "> uploaded hdfs:///input/$f/$filename"
+              done
+
+              hdfs dfs -put -f - $last_downloaded_file <<< $date_to_download
+
+              echo "=== Success! ==="
+            env:
+            - name: DOWNLOAD_START_DATE
+              value: "2021/11/01"
+            - name: HADOOP_CONF_DIR
+              value: "/hadoop-config"
+            - name: HADOOP_USER_NAME
+              value: "root"
+            volumeMounts:
+            - name: hadoop-conf
+              mountPath: /hadoop-config
+            - name: data
+              mountPath: /data
+          volumes:
+          - name: hadoop-conf
+            configMap:
+              name: hadoop-conf
+          - name: data
+            emptyDir: {}
+

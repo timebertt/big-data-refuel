@@ -58,7 +58,7 @@ stationsSchema = StructType() \
     .add("openingtimes_json", StringType())
 
 # load data from hdfs
-pricesURL = "hdfs:///input/prices/2021/11/*-prices.csv"
+pricesURL = "hdfs:///input/prices/*-prices.csv"
 if mode == "local":
     pricesURL = "file:///data/*-prices-filtered.csv"
 
@@ -75,12 +75,13 @@ prices = spark.readStream.format("csv").schema(pricesSchema).option("header", "t
 # Print the schema in a tree format
 # prices.printSchema()
 
-stationsURL = "hdfs:///input/stations/2021/11/2021-11-17*-stations.csv"
+stationsURL = "hdfs:///input/stations/*-stations.csv"
 if mode == "local":
     stationsURL = "file:///data/*-stations-filtered.csv"
 
 stations = spark.readStream.format("csv").schema(stationsSchema).option("header", "true") \
-    .load(stationsURL)
+    .load(stationsURL) \
+    .dropDuplicates("uuid")  # returns one row per station (we don't care about changes in metadata)
 
 # Compute most popular slides
 minPrices = prices \
