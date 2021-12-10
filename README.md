@@ -11,11 +11,18 @@ A running Hadoop cluster with YARN:
 
 ```bash
 helm repo add stable https://charts.helm.sh/stable
+storage_class=default # replace with faster StorageClass if desired 
 helm install --namespace=refuel --set hdfs.dataNode.replicas=1 \
   --set hdfs.webhdfs.enabled=true \
   --set yarn.nodeManager.replicas=3 \
   --set yarn.nodeManager.resources.requests.cpu=2,yarn.nodeManager.resources.requests.memory=4Gi \
   --set yarn.nodeManager.resources.limits.cpu=3,yarn.nodeManager.resources.limits.memory=6Gi \
+  --set persistence.nameNode.enabled=true \
+  --set persistence.nameNode.storageClass=$storage_class \
+  --set persistence.nameNode.size=15Gi \
+  --set persistence.dataNode.enabled=true \
+  --set persistence.dataNode.storageClass=$storage_class \
+  --set persistence.dataNode.size=50Gi \
   hadoop stable/hadoop
 ```
 
