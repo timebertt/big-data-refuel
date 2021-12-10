@@ -1,10 +1,11 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: mysql
   labels:
     app: mysql
 spec:
+  serviceName: mysql
   replicas: 1
   selector:
     matchLabels:
@@ -14,16 +15,9 @@ spec:
       labels:
         app: mysql
     spec:
-      volumes:
-      - name: init-volume
-        configMap:
-          name: mysql-init
       containers:
       - name: mysql
         image: mysql
-        volumeMounts:
-        - name: init-volume
-          mountPath: /docker-entrypoint-initdb.d/
         env:
         - name: MYSQL_ROOT_PASSWORD
           value: "mysecretpw"
@@ -34,6 +28,26 @@ spec:
           name: mysql
         - containerPort: 33060
           name: mysql-xproto
+        volumeMounts:
+        - name: init-volume
+          mountPath: /docker-entrypoint-initdb.d/
+        - name: data
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: init-volume
+        configMap:
+          name: mysql-init
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+      labels:
+        app: mysql
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 50Gi
 ---
 apiVersion: v1
 kind: Service
@@ -46,8 +60,8 @@ spec:
   - name: mysql
     protocol: TCP
     port: 3306
-    targetPort: 3306
+    targetPort: mysql
   - name: mysql-xproto
     protocol: TCP
     port: 33060
-    targetPort: 33060
+    targetPort: mysql-xproto

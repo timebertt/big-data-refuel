@@ -1,4 +1,4 @@
-CREATE TABLE `fuel_prices` (
+CREATE TABLE IF NOT EXISTS `fuel_prices` (
    `window_start` TIMESTAMP NOT NULL,
    `window_end` TIMESTAMP NOT NULL,
    `post_code` CHAR(5) NOT NULL,

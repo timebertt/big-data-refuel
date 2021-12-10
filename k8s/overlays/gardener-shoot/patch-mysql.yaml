@@ -1,0 +1,17 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql
+spec:
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+      labels:
+        app: mysql
+    spec:
+      storageClassName: gce-sc-fast
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 50Gi
