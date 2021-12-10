@@ -14,7 +14,7 @@ configMapGenerator:
   files:
   - hadoop/core-site.xml
   - hadoop/hdfs-site.xml
-  - hadoop/mapred.xml
+  - hadoop/mapred-site.xml
   - hadoop/yarn-site.xml
 
 resources:
