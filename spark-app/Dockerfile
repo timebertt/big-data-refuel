@@ -46,7 +46,7 @@ RUN pip install --no-cache-dir -t /app/dependencies -r requirements.txt
 
 # Zip all dependencies
 WORKDIR /app/dependencies
-RUN zip -r /app/dependencies.zip .
+RUN zip -r /app/dependencies.zip . -i .
 
 WORKDIR /app
 RUN rm -rf /app/dependencies

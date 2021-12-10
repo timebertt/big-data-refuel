@@ -107,14 +107,19 @@ minPrices.printSchema()
 
 
 def saveToDatabase(batchDataframe, batchId):
+    # use jdbc driver to write to mysql. Manual insert/upsert handling will not scale, the built-in jdbc handling
+    # already provides connection pooling, etc.
     batchDataframe.write \
         .format('jdbc').options(
         url='jdbc:mysql://{}:{}/prices'.format(dbOptions["host"], dbOptions["port"]),
-        driver='com.mysql.jdbc.Driver',
+        driver='com.mysql.cj.jdbc.Driver',
         dbtable='fuel_prices',
         user=dbOptions["user"],
         password=dbOptions["password"]) \
         .mode('append').save()
+    # Note: append makes jobs fail, if data is already present in mysql. Other modes cause the jobs to hang forever.
+    # Hence, append is used here although it's conceptually wrong for this use case.
+    # In order to rerun the spark App, the table has to be truncated first.
 
 
 dbInsertStream = minPrices \
