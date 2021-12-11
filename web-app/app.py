@@ -21,14 +21,19 @@ mydb = mysql.connector.connect(
     database=environ.get("MYSQL_DATABASE", "prices"),
 )
 
+
 def fetchResult(input_post_code):
-     # Rufe nur die Werte der letzten 7 Tage ab
-    #today = datetime.today()
-    today = datetime(2021,11,15,12,0,0)
+    # Rufe nur die Werte der letzten 7 Tage ab
+    # today = datetime.today()
+    today = datetime(2021, 11, 15, 12, 0, 0)
     start_date = (today - timedelta(days=7)).strftime('%Y-%m-%d %H:%M:%S')
     cur = mydb.cursor(dictionary=True, buffered=True)
-    cur.execute(f'''SELECT * FROM fuel_prices WHERE post_code = {input_post_code} AND window_start > "{start_date}" AND window_start <"{today}"''')
+    cur.execute("""
+        SELECT * FROM fuel_prices
+        WHERE post_code = %s AND window_start > %s AND window_start < %s
+        """, (input_post_code, start_date, today))
     return cur.fetchall()
+
 
 @app.route('/',methods=["GET", "POST"])
 @app.route('/home',methods=["GET", "POST"])
@@ -57,7 +62,7 @@ def home():
         buf = BytesIO()
         fig.savefig(buf, format="png",transparent=True)
         # Embed the result in the html output.
-        plot_url = base64.b64encode(buf.getbuffer()).decode("ascii") 
+        plot_url = base64.b64encode(buf.getbuffer()).decode("ascii")
 
         return render_template(
             'result.html',
