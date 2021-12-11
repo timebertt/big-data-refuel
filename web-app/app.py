@@ -35,44 +35,45 @@ def fetchResult(input_post_code):
     return cur.fetchall()
 
 
-@app.route('/',methods=["GET", "POST"])
-@app.route('/home',methods=["GET", "POST"])
+@app.route('/result', methods=["GET"])
+def result():
+    # Was der Benutzer eingegeben hat
+    req = request.args
+    parameters = [
+        {"kraftstoff": req["kraftstoff"], "wochentag": req["zeit"]}
+    ]
+    # Was als Ergebnis geliefert wird
+    res = pd.DataFrame(fetchResult(req["plz"]))
+    results = [{"name": "Esso Tankstelle", "street": "SCHOZACHER STR. 51", "plz": req["plz"], "city": "STUTTGART",
+                "price": res[req["kraftstoff"]]}
+               ]
+
+    # Generate the figure
+    fig = Figure(figsize=(12, 6), dpi=80)
+    ax = fig.subplots()
+    ax.plot(res["window_start"], res[req["kraftstoff"]],label=req["kraftstoff"].title())
+    ax.legend(loc="upper left")
+    ax.grid()
+    # Save it to a temporary buffer.
+    buf = BytesIO()
+    fig.savefig(buf, format="png",transparent=True)
+    # Embed the result in the html output.
+    plot_url = base64.b64encode(buf.getbuffer()).decode("ascii")
+
+    return render_template(
+        'result.html',
+        title='Ergebnis',
+        year=datetime.now().year,
+        message=f'Der Preisverlauf für {req["kraftstoff"].title()} über die letzten 7 Tage:',
+        results=results,
+        parameters=parameters,
+        plot_url=plot_url)
+
+
+@app.route('/', methods=["GET"])
+@app.route('/home', methods=["GET"])
 def home():
     """Renders the home page."""
-
-    if request.method == "POST":
-        # Was der Benutzer eingegeben hat
-        req = request.form
-        parameters = [
-            {"kraftstoff": req["kraftstoff"], "wochentag": req["zeit"]}
-        ]
-        # Was als Ergebnis geliefert wird
-        res = pd.DataFrame(fetchResult(req["plz"]))
-        results = [{"name": "Esso Tankstelle", "street": "SCHOZACHER STR. 51", "plz": req["plz"], "city": "STUTTGART",
-            "price": res[req["kraftstoff"]]}
-        ]
-
-        # Generate the figure 
-        fig = Figure(figsize=(12, 6), dpi=80)
-        ax = fig.subplots()
-        ax.plot(res["window_start"], res[req["kraftstoff"]],label=req["kraftstoff"].title())
-        ax.legend(loc="upper left")
-        ax.grid()
-        # Save it to a temporary buffer.
-        buf = BytesIO()
-        fig.savefig(buf, format="png",transparent=True)
-        # Embed the result in the html output.
-        plot_url = base64.b64encode(buf.getbuffer()).decode("ascii")
-
-        return render_template(
-            'result.html',
-            title='Ergebnis',
-            year=datetime.now().year,
-            message=f'Der Preisverlauf für {req["kraftstoff"].title()} über die letzten 7 Tage:',
-            results=results,
-            parameters=parameters,
-            plot_url=plot_url)
-
     return render_template(
         'index.html',
         title='Neue Suche',
@@ -100,7 +101,6 @@ def faq():
         year=datetime.now().year,
         message='Hier findest du Antworten auf wichtige Fragen'
     )
-
 
 
 if __name__ == '__main__':
