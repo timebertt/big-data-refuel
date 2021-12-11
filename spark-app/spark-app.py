@@ -55,9 +55,9 @@ stationsSchema = StructType() \
     .add("openingtimes_json", StringType())
 
 # load data from hdfs
-pricesURL = "hdfs:///input/prices/*-prices.csv"
-if mode == "local":
-    pricesURL = "file:///data/*-prices-filtered.csv"
+pricesURL = "file:///data/*-prices-filtered.csv"
+if mode == "cluster":
+    pricesURL = "hdfs:///input/prices/*-prices.csv"
 
 prices = spark.readStream.format("csv").schema(pricesSchema).option("header", "true") \
     .load(pricesURL) \
@@ -72,9 +72,9 @@ prices = spark.readStream.format("csv").schema(pricesSchema).option("header", "t
 # Print the schema in a tree format
 # prices.printSchema()
 
-stationsURL = "hdfs:///input/stations/*-stations.csv"
-if mode == "local":
-    stationsURL = "file:///data/*-stations-filtered.csv"
+stationsURL = "file:///data/*-stations-filtered.csv"
+if mode == "cluster":
+    stationsURL = "hdfs:///input/stations/*-stations.csv"
 
 stations = spark.readStream.format("csv").schema(stationsSchema).option("header", "true") \
     .load(stationsURL) \
@@ -120,14 +120,21 @@ def saveToDatabase(batchDataframe, batchId):
     # Note: append makes jobs fail, if data is already present in mysql. Other modes cause the jobs to hang forever.
     # Hence, append is used here although it's conceptually wrong for this use case.
     # In order to rerun the spark App, the table has to be truncated first.
+    # If checkpointing is enabled (i.e. running on cluster), Spark might be able to recover from checkpoints though and
+    # continue the execution without duplicate key failures.
 
 
 dbInsertStream = minPrices \
     .writeStream \
     .trigger(processingTime="1 minute") \
     .outputMode("append") \
-    .foreachBatch(saveToDatabase) \
-    .start()
+    .foreachBatch(saveToDatabase)
+
+if mode == "cluster":
+    # configure checkpointing to HDFS
+    dbInsertStream = dbInsertStream.option("checkpointLocation", "/checkpoint")
+
+dbInsertStream.start()
 
 # Wait for termination
 spark.streams.awaitAnyTermination()

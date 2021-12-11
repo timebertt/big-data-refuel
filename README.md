@@ -73,6 +73,25 @@ spark@ef55f43b991d:/spark-app$ /entrypoint.sh spark-app.py
 ...
 ```
 
+Our Spark app checkpoints to HDFS under `/checkpoint`:
+```
+$ k exec hadoop-hadoop-hdfs-dn-0 -- hdfs dfs -du -h "/checkpoint/*"
+41  /checkpoint/commits/0
+41  /checkpoint/commits/1
+45  /checkpoint/metadata
+488  /checkpoint/offsets/0
+500  /checkpoint/offsets/1
+500  /checkpoint/offsets/2
+712  /checkpoint/sources/0
+736  /checkpoint/sources/1
+3.8 M    /checkpoint/state/0
+137.2 M  /checkpoint/state/1
+623.2 K  /checkpoint/state/2
+```
+
+If the App is interrupted (e.g. because of a Pod deletion/failure), execution is continued from where it left off.
+However, it might take a few minutes to initialize the Spark Jobs from the checkpoints.
+
 ### Frontend
 
 To run locally:
