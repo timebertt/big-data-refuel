@@ -6,12 +6,9 @@
 <div class="jumbotron">
     <br>
     <h2>{{ message }}</h2>
+    <br>
 
-
-
-    {% for result in results %}
-    <p>für PLZ {{result.plz}}</p>
-    {% endfor %}
+    <p>für PLZ {{ plz }}</p>
 
    
     <img src="data:image/png;base64, {{ plot_url }}">

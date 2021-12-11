@@ -39,14 +39,9 @@ def fetchResult(input_post_code):
 def result():
     # Was der Benutzer eingegeben hat
     req = request.args
-    parameters = [
-        {"kraftstoff": req["kraftstoff"], "wochentag": req["zeit"]}
-    ]
+
     # Was als Ergebnis geliefert wird
     res = pd.DataFrame(fetchResult(req["plz"]))
-    results = [{"name": "Esso Tankstelle", "street": "SCHOZACHER STR. 51", "plz": req["plz"], "city": "STUTTGART",
-                "price": res[req["kraftstoff"]]}
-               ]
 
     # Generate the figure
     fig = Figure(figsize=(12, 6), dpi=80)
@@ -64,9 +59,9 @@ def result():
         'result.html',
         title='Ergebnis',
         year=datetime.now().year,
-        message=f'Der Preisverlauf für {req["kraftstoff"].title()} über die letzten 7 Tage:',
-        results=results,
-        parameters=parameters,
+        message=f'Der Preisverlauf für {req["kraftstoff"].title()} über die letzten 7 Tage',
+        plz= req["plz"],
+        kraftstoff=req["kraftstoff"],
         plot_url=plot_url)
 
 
