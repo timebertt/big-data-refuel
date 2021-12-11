@@ -3,14 +3,14 @@ Routes and views for the flask application.
 """
 
 import mysql.connector
-from datetime import datetime
-from datetime import timedelta
+from datetime import datetime, timedelta
 from os import environ
 import pandas as pd
 from io import BytesIO
 from matplotlib.figure import Figure
 from flask import Flask, render_template, request
 import base64
+from geopy.geocoders import Nominatim
 
 app = Flask(__name__)
 
@@ -37,10 +37,10 @@ def fetchResult(input_post_code):
 
 @app.route('/result', methods=["GET"])
 def result():
-    # Was der Benutzer eingegeben hat
+    # User input
     req = request.args
 
-    # Was als Ergebnis geliefert wird
+    # Query result
     res = pd.DataFrame(fetchResult(req["plz"]))
 
     # Generate the figure
@@ -55,14 +55,17 @@ def result():
     # Embed the result in the html output.
     plot_url = base64.b64encode(buf.getbuffer()).decode("ascii")
 
+    # Receive location information
+    geolocator = Nominatim(user_agent="geoapiExercises") 
+    location = geolocator.geocode(req["plz"]).raw['display_name'].split()
+
     return render_template(
         'result.html',
         title='Ergebnis',
         year=datetime.now().year,
         message=f'Der Preisverlauf für {req["kraftstoff"].title()} über die letzten 7 Tage',
-        plz= req["plz"],
-        kraftstoff=req["kraftstoff"],
-        plot_url=plot_url)
+        plot_url=plot_url,
+        location=location)
 
 
 @app.route('/', methods=["GET"])
