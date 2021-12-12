@@ -57,7 +57,8 @@ def result():
 
     # Receive location information
     geolocator = Nominatim(user_agent="geoapiExercises")
-    location = geolocator.geocode(req["plz"]).raw['display_name'].split()
+    location = geolocator.geocode({"postalcode": req["plz"], "country": "germany"}).raw['display_name'].split()
+    location = [loc.removesuffix(",") for loc in location]
 
     return render_template(
         'result.html',
