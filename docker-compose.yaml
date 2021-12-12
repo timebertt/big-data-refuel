@@ -1,4 +1,4 @@
-version: '3'
+version: '3.9'
 
 services:
   spark-app:
@@ -33,3 +33,7 @@ services:
       MYSQL_ROOT_PASSWORD: mysecretpw
     volumes:
     - ./data/mysql-dump.sql:/docker-entrypoint-initdb.d/mysql-init.sql
+  memcached:
+    image: memcached:1.6-alpine
+    ports:
+    - 11211:11211

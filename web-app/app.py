@@ -1,19 +1,25 @@
 """
 Routes and views for the flask application.
 """
+import base64
+import socket
+import time
+from datetime import datetime, timedelta
+from io import BytesIO
+from os import environ
 
 import mysql.connector
-from datetime import datetime, timedelta
-from os import environ
+import numpy as np
 import pandas as pd
-from io import BytesIO
-from matplotlib.figure import Figure
+import sched
 from flask import Flask, render_template, request
-import base64
 from geopy.geocoders import Nominatim
+from matplotlib.figure import Figure
+from pymemcache.client.hash import HashClient
 
 app = Flask(__name__)
 
+# MySQL connection
 mydb = mysql.connector.connect(
     host=environ.get("MYSQL_HOST", "localhost"),
     user=environ.get("MYSQL_USER", "root"),
@@ -21,6 +27,60 @@ mydb = mysql.connector.connect(
     database=environ.get("MYSQL_DATABASE", "prices"),
 )
 
+# memcached connection
+memcachedOptions = {
+    "host": environ.get("MEMCACHED_HOST", "localhost"),
+    "port": int(environ.get("MEMCACHED_PORT", "11211")),
+    "refreshInterval": int(environ.get("MEMCACHED_REFRESH_INTERVAL", "10")),
+}
+
+memcacheClient = None
+memcachedServers = []
+
+
+def initMemcacheClient():
+    global memcacheClient, memcachedServers
+
+    try:
+        serversLookup = [a[4] for a in socket.getaddrinfo(memcachedOptions["host"], memcachedOptions["port"],
+                                                          proto=socket.IPPROTO_TCP)]
+    except socket.gaierror as e:
+        memcachedServers = []
+        print(f"Error getting memcached servers from DNS: {e}")
+        return
+
+    serversLookup.sort()
+    if np.array_equal(serversLookup, memcachedServers):
+        return
+
+    memcachedServers = serversLookup
+    print(f"Updated memcached server list to {memcachedServers}")
+
+    if memcacheClient is not None:
+        # disconnect existing client
+        memcacheClient.close()
+
+    memcacheClient = HashClient(memcachedServers)
+
+
+initMemcacheClient()
+
+s = sched.scheduler(time.time, time.sleep)
+
+
+def refreshMemcacheClient(sc):
+    initMemcacheClient()
+    s.enter(memcachedOptions["refreshInterval"], 1, refreshMemcacheClient, (sc,))
+
+
+s.enter(memcachedOptions["refreshInterval"], 1, refreshMemcacheClient, (s,))
+s.run()
+
+def fetchResultFromCache(post_code):
+    if memcacheClient is None:
+        return None
+
+    return memcacheClient.get(f'/prices/{post_code}')
 
 def fetchResult(input_post_code):
     # Rufe nur die Werte der letzten 7 Tage ab
@@ -41,17 +101,26 @@ def result():
     req = request.args
 
     # Query result
-    res = pd.DataFrame(fetchResult(req["plz"]))
+    post_code = req["plz"]
+    result = fetchResultFromCache(post_code)
+    if result is not None:
+        print(f"cache hit for post code {post_code}")
+    else:
+        print(f"cache miss for post code {post_code}")
+        result = fetchResult(post_code)
+        memcacheClient.set(f'/prices/{post_code}', result)
+
+    res = pd.DataFrame(result)
 
     # Generate the figure
     fig = Figure(figsize=(12, 6), dpi=80)
     ax = fig.subplots()
-    ax.plot(res["window_start"], res[req["kraftstoff"]],label=req["kraftstoff"].title())
+    ax.plot(res["window_start"], res[req["kraftstoff"]], label=req["kraftstoff"].title())
     ax.legend(loc="upper left")
     ax.grid()
     # Save it to a temporary buffer.
     buf = BytesIO()
-    fig.savefig(buf, format="png",transparent=True)
+    fig.savefig(buf, format="png", transparent=True)
     # Embed the result in the html output.
     plot_url = base64.b64encode(buf.getbuffer()).decode("ascii")
 

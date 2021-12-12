@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: memcached
-        image: memcached:alpine
+        image: memcached:1.6-alpine
         ports:
         - containerPort: 11211
 ---
@@ -28,7 +28,7 @@ spec:
   # Headless service (i.e., no ip is assigned)
   clusterIP: None
   selector:
-    app: my-memcached
+    app: memcached
   ports:
   - port: 11211
     targetPort: 11211
