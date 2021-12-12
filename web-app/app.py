@@ -21,17 +21,21 @@ mydb = mysql.connector.connect(
     database=environ.get("MYSQL_DATABASE", "prices"),
 )
 
+def fetchLatestTimestamp():
+    # Rufe den neusten Timestamp ab
+    cur = mydb.cursor(dictionary=True, buffered=True)
+    cur.execute("SELECT MAX(window_start) FROM fuel_prices")
+    results = cur.fetchall()
+    return results
 
 def fetchResult(input_post_code):
-    # Rufe nur die Werte der letzten 7 Tage ab
-    # today = datetime.today()
-    today = datetime(2021, 11, 15, 12, 0, 0)
-    start_date = (today - timedelta(days=7)).strftime('%Y-%m-%d %H:%M:%S')
+    latest_date = fetchLatestTimestamp()[0].get("MAX(window_start)")
+    start_date = (latest_date - timedelta(days=7)).strftime('%Y-%m-%d %H:%M:%S')
     cur = mydb.cursor(dictionary=True, buffered=True)
     cur.execute("""
         SELECT * FROM fuel_prices
         WHERE post_code = %s AND window_start > %s AND window_start < %s
-        """, (input_post_code, start_date, today))
+        """, (input_post_code, start_date, latest_date))
     return cur.fetchall()
 
 
