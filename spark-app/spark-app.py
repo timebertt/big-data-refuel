@@ -120,6 +120,7 @@ dbInsertStream = minPrices \
     .trigger(processingTime="1 minute") \
     .outputMode("append") \
     .foreachBatch(saveToDatabase)
+    # Note: only append is supported as outputMode, update can't be used because two Streaming DataFrames are joined before.
 
 if mode == "cluster":
     # configure checkpointing to HDFS
