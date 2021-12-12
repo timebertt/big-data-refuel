@@ -5,11 +5,8 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import *
 from pyspark.sql.types import DoubleType, StringType, StructType, TimestampType, IntegerType
 
-mode = environ.get("MODE", "local")
-
-dbOptions = {"host": "mysql", 'port': 3306, "user": "root", "password": "mysecretpw"}
-
-dbSchema = 'prices'
+mode = environ.get("MODE", "local")  # 'local' or 'cluster'
+dbOptions = {"host": "mysql", 'port': 3306, "user": "root", "password": "mysecretpw", "database": "prices"}
 windowDuration = '4 hours'
 
 # load default spark config (including hadoop config based on `HADOOP_CONF_DIR` environment variable)
@@ -66,12 +63,6 @@ prices = spark.readStream.format("csv").schema(pricesSchema).option("header", "t
     .withColumn('e5', mapZeroToNull('e5')) \
     .withColumn('e10', mapZeroToNull('e10'))
 
-# Displays the content of the DataFrame to stdout
-# prices.show()
-
-# Print the schema in a tree format
-# prices.printSchema()
-
 stationsURL = "file:///data/*-stations-filtered.csv"
 if mode == "cluster":
     stationsURL = "hdfs:///input/stations/*-stations.csv"
@@ -80,7 +71,7 @@ stations = spark.readStream.format("csv").schema(stationsSchema).option("header"
     .load(stationsURL) \
     .dropDuplicates(["uuid"])  # returns one row per station (we don't care about changes in metadata)
 
-# Compute most popular slides
+# compute min prices per time window and post code
 minPrices = prices \
     .join(stations, prices.station_uuid == stations.uuid, "inner") \
     .withWatermark("date", windowDuration) \
@@ -105,13 +96,13 @@ minPrices = prices \
 
 minPrices.printSchema()
 
-
+# write aggregated data to mysql
 def saveToDatabase(batchDataframe, batchId):
     # use jdbc driver to write to mysql. Manual insert/upsert handling will not scale, the built-in jdbc handling
     # already provides connection pooling, etc.
     batchDataframe.write \
         .format('jdbc').options(
-        url='jdbc:mysql://{}:{}/prices'.format(dbOptions["host"], dbOptions["port"]),
+        url='jdbc:mysql://{}:{}/{}'.format(dbOptions["host"], dbOptions["port"], dbOptions["database"]),
         driver='com.mysql.cj.jdbc.Driver',
         dbtable='fuel_prices',
         user=dbOptions["user"],
