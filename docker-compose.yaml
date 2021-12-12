@@ -15,6 +15,15 @@ services:
     - ./data:/data
     environment:
       MODE: local
+  web-app:
+    image: timebertt/refuel-web-app
+    build:
+      context: web-app
+    restart: always
+    ports:
+    - 5555:5555
+    environment:
+      MYSQL_HOST: mysql
   mysql:
     image: mysql
     ports:

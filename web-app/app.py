@@ -56,7 +56,7 @@ def result():
     plot_url = base64.b64encode(buf.getbuffer()).decode("ascii")
 
     # Receive location information
-    geolocator = Nominatim(user_agent="geoapiExercises") 
+    geolocator = Nominatim(user_agent="geoapiExercises")
     location = geolocator.geocode(req["plz"]).raw['display_name'].split()
 
     return render_template(
@@ -102,7 +102,7 @@ def faq():
 
 
 if __name__ == '__main__':
-    HOST = environ.get('SERVER_HOST', 'localhost')
+    HOST = environ.get('SERVER_HOST', '0.0.0.0')
     try:
         PORT = int(environ.get('SERVER_PORT', '5555'))
     except ValueError:

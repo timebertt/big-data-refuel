@@ -67,7 +67,7 @@ Connection details are configured in `core-site.xml` and `hdfs-site.xml` (file l
 
 To run the spark app locally in a Docker container:
 ```bash
-$ docker-compose up -d --build
+$ docker-compose up -d --build mysql spark-app
 $ docker exec -it big-data-refuel_spark-app_1 bash
 spark@ef55f43b991d:/spark-app$ /entrypoint.sh spark-app.py
 ...
@@ -94,8 +94,10 @@ However, it might take a few minutes to initialize the Spark Jobs from the check
 
 ### Frontend
 
-To run locally:
+To run the web app locally in a Docker container:
 ```bash
-$ docker-compose up -d
-$ python web-app/app.py
+$ docker-compose up -d mysql # start mysql prerequisite
+$ docker-compose up --build web-app
+$ # open http://localhost:5555 in browser
+$ # after code changes: stop (^C) and run again
 ```
