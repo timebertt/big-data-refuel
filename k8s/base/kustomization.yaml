@@ -19,7 +19,6 @@ configMapGenerator:
 
 resources:
 - download-data-cronjob.yaml
-- memcached.yaml
 - mysql.yaml
 - refuel-spark-app.yaml
 - refuel-web-app.yaml
