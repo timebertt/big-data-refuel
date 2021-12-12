@@ -30,6 +30,32 @@ Note: `yarn.nodeManager.replicas` is the number of workers that can run spark jo
 When setting `yarn.nodeManager.resources.requests.{cpu,memory}`, consider the amount of compute resources available in your cluster,
 e.g. a minikube cluster is limited by the size of your machine.
 
+If deployed with this helm chart, the HDFS namenode will format on each start (see https://github.com/helm/charts/issues/19499).
+This results in a new cluster ID and thus datanodes (that have the old cluster ID persisted on disk) won't be able to
+join the cluster with errors like this:
+```text
+2021-12-12 09:58:14,108 WARN org.apache.hadoop.hdfs.server.common.Storage: Failed to add storage directory [DISK]file:/root/hdfs/datanode/
+java.io.IOException: Incompatible clusterIDs in /root/hdfs/datanode: namenode clusterID = CID-19a00965-8914-47d2-8d61-0b4fc3a8d2cd; datanode clusterID = CID-566449ab-0985-4b54-9aa2-7382ca1f3a93
+	at org.apache.hadoop.hdfs.server.datanode.DataStorage.doTransition(DataStorage.java:760)
+	at org.apache.hadoop.hdfs.server.datanode.DataStorage.loadStorageDirectory(DataStorage.java:293)
+	at org.apache.hadoop.hdfs.server.datanode.DataStorage.loadDataStorage(DataStorage.java:409)
+	at org.apache.hadoop.hdfs.server.datanode.DataStorage.addStorageLocations(DataStorage.java:388)
+	at org.apache.hadoop.hdfs.server.datanode.DataStorage.recoverTransitionRead(DataStorage.java:556)
+	at org.apache.hadoop.hdfs.server.datanode.DataNode.initStorage(DataNode.java:1649)
+	at org.apache.hadoop.hdfs.server.datanode.DataNode.initBlockPool(DataNode.java:1610)
+	at org.apache.hadoop.hdfs.server.datanode.BPOfferService.verifyAndSetNamespaceInfo(BPOfferService.java:374)
+	at org.apache.hadoop.hdfs.server.datanode.BPServiceActor.connectToNNAndHandshake(BPServiceActor.java:280)
+	at org.apache.hadoop.hdfs.server.datanode.BPServiceActor.run(BPServiceActor.java:816)
+	at java.lang.Thread.run(Thread.java:745)
+2021-12-12 09:58:14,111 ERROR org.apache.hadoop.hdfs.server.datanode.DataNode: Initialization failed for Block pool <registering> (Datanode Uuid 46b21fcc-74de-4ec6-9484-8cb2e5a3bbf9) service to hadoop-hadoop-hdfs-nn/100.96.0.22:9000. Exiting.
+```
+
+To fix this behaviour, apply the following patch to the `hadoop` ConfigMap:
+```bash
+k patch cm hadoop-hadoop --patch-file k8s/hadoop-bootstrap-fix.yaml
+```
+(Remember to patch the ConfigMap again after upgrading the helm chart.)
+
 ## Deploy
 
 To develop using [Skaffold](https://skaffold.dev/), use `skaffold dev` (development mode with automatic rebuilds on file changes) or `skaffold run` (one-time deploy).
