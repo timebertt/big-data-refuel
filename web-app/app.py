@@ -22,7 +22,6 @@ mydb = mysql.connector.connect(
 )
 
 def fetchLatestTimestamp():
-    # Rufe den neusten Timestamp ab
     cur = mydb.cursor(dictionary=True, buffered=True)
     cur.execute("SELECT MAX(window_start) FROM fuel_prices")
     results = cur.fetchall()
@@ -34,8 +33,8 @@ def fetchResult(input_post_code):
     cur = mydb.cursor(dictionary=True, buffered=True)
     cur.execute("""
         SELECT * FROM fuel_prices
-        WHERE post_code = %s AND window_start > %s AND window_start < %s
-        """, (input_post_code, start_date, latest_date))
+        WHERE post_code = %s AND window_start > %s
+        """, (input_post_code, start_date))
     return cur.fetchall()
 
 
